@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components import (
     button,
     climate,
+    cooking,
     cover,
     fan,
     humidifier,
@@ -2293,3 +2294,64 @@ class AlexaCameraStreamController(AlexaCapability):
                 "audioCodecs": ["AAC"],
             }
         ]
+
+
+class AlexaCooking(AlexaCapability):
+    """Implements Alexa.Cooking.
+    
+    https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-cooking.html
+    """
+
+    def __init__(self, entity: State, supports_remote_start: bool = False) -> None:
+        """Initialize the entity."""
+        super().__init__(entity)
+        self._supports_remote_start = supports_remote_start
+
+    def name(self) -> str:
+        """Return the Alexa API name of this interface."""
+        return "Alexa.Cooking"
+    
+    def properties_supported(self) -> list[dict[str, str]]:
+        """Return what properties this entity supports."""
+        return [{"name": "cookingMode"}, {"name": "foodItem"}, {"name": "cookingTimeInterval"}, {"name": "cookingStatus"}]
+
+    def properties_proactively_reported(self) -> bool:
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self) -> bool:
+        """Return True if properties can be retrieved."""
+        return True
+    
+    def get_property(self, name: str) -> Any:
+        """Read and return a property."""
+        if name not in ["cookingMode", "foodItem", "cookingTimeInterval", "cookingStatus"]:
+            raise UnsupportedProperty(name)
+
+        if name == "cookingMode":
+            self.entity.attributes.get("cooking_mode")
+        if name == "foodItem":
+            self.entity.attributes.get("food_item")
+        if name == "cookingTimeInterval":
+            self.entity.attributes.get("cooking_time_interval")
+        if name == "cookingStatus":
+            self.entity.attributes.get("cooking_status")
+        return None
+    
+    # TODO: To complete
+    def configuration(self) -> dict[str, Any] | None:
+        """Return configuration object with supported authorization types."""
+        cooking_modes = self.entity.attributes[cooking.ATTR_SUPPORTED_COOKING_MODES]
+        supported_modes = [{"value": "OFF"}]
+
+        cooking_statuses = self.entity.attributes[cooking.ATTR_SUPPORTED_COOKING_STATUSES]
+        supported_statuses = [{"value": cooking.CookingStatus.NOT_IN_USE}]
+
+        configuration = {
+            "supportsRemoteStart": self._supports_remote_start,
+            "supportedCookingModes": supported_modes,
+            "supportedCookingStatuses": supported_statuses
+        }
+
+        return configuration
+    

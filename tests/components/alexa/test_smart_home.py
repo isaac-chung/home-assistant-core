@@ -4461,3 +4461,40 @@ async def test_alexa_config(
         assert len(test_config._auth.async_invalidate_access_token.mock_calls)
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")
+
+
+
+async def test_cooking_discovery(hass: HomeAssistant) -> None:
+    """Test cooking discovery."""
+    device = (
+        "cooking.test",
+        "off",
+        {
+            "friendly_name": "Test microwave",
+            "_supports_remote_start": False,
+            "supported_features": 1097,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cooking#test"
+    assert appliance["displayCategories"][0] == "microwave"
+    assert appliance["friendlyName"] == "Test microwave"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.Cooking",
+        "Alexa.EndpointHealth",
+    )
+
+    cooking_capability = get_capability(
+        capabilities, "Alexa.Cooking"
+    )
+    assert cooking_capability is not None
+    configuration = cooking_capability["configuration"]
+    assert configuration['supportsRemoteStart'] == False
+    assert {"value": "OFF"} in configuration["supportedCookingModes"]
+    assert {"value": "DEFROST"} in configuration["supportedCookingModes"]
+    assert {"value": "REHEAT"} in configuration["supportedCookingModes"]
+    assert {"value": "BOIL"} in configuration["supportedCookingModes"]

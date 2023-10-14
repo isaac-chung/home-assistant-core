@@ -1081,6 +1081,7 @@ SERVICE_ALARM_ARM_VACATION: Final = "alarm_arm_vacation"
 SERVICE_ALARM_ARM_CUSTOM_BYPASS: Final = "alarm_arm_custom_bypass"
 SERVICE_ALARM_TRIGGER: Final = "alarm_trigger"
 
+SERVICE_SET_COOKING_MODE: Final = "set_cooking_mode"
 
 SERVICE_LOCK: Final = "lock"
 SERVICE_UNLOCK: Final = "unlock"

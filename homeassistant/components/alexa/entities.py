@@ -13,6 +13,7 @@ from homeassistant.components import (
     button,
     camera,
     climate,
+    cooking,
     cover,
     event,
     fan,
@@ -57,6 +58,7 @@ from .capabilities import (
     AlexaColorController,
     AlexaColorTemperatureController,
     AlexaContactSensor,
+    AlexaCooking,
     AlexaDoorbellEventSource,
     AlexaEndpointHealth,
     AlexaEqualizerController,
@@ -991,3 +993,26 @@ class CameraCapabilities(AlexaEntity):
             return False
 
         return True
+
+
+@ENTITY_ADAPTERS.register(cooking.DOMAIN)
+class CookingCapabilities(AlexaEntity):
+    """Class to represent cooking event capabilities."""
+
+    def default_display_categories(self) -> list[str]:
+        """Return the display categories for this entity."""
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class == cooking.CookingDeviceClass.MICROWAVE:
+            return [DisplayCategory.MICROWAVE]
+        if device_class == cooking.CookingDeviceClass.OVEN:
+            return [DisplayCategory.OVEN]
+        if device_class == cooking.CookingDeviceClass.SLOW_COOKER:
+            return [DisplayCategory.SLOW_COOKER]
+
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
+        """Yield the supported interfaces."""
+        yield AlexaCooking(self.entity)
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.entity)

@@ -11,6 +11,7 @@ from homeassistant.components import (
     button,
     camera,
     climate,
+    cooking,
     cover,
     fan,
     group,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
+    SERVICE_SET_COOKING_MODE,
     SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -68,6 +70,7 @@ from .const import (
 )
 from .entities import async_get_entities
 from .errors import (
+    AlexaCookingRemoteStartNotSupportedError,
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
@@ -377,6 +380,55 @@ async def async_api_increase_color_temp(
     )
 
     return directive.response()
+
+
+@HANDLERS.register(("Alexa.Cooking", "SetCookingMode"))
+async def async_api_set_cooking_mode(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process a set cooking mode request."""
+    entity = directive.entity
+    instance = directive.instance
+    domain = entity.domain
+    service = SERVICE_SET_COOKING_MODE
+    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
+
+    payload = directive.payload
+    response = directive.response()
+
+    cooking_mode = payload["cookingMode"]
+    data[cooking.ATTR_COOKING_MODE] = cooking_mode
+
+    ## Checks if the device is off and is remote start is true
+    if "foodItem" in payload:
+        support_remote_start = entity.attributes.get(cooking.ATTR_SUPPORT_REMOTE_START)
+        if not support_remote_start:
+            msg = f"{entity} does not support remote start."
+            raise AlexaCookingRemoteStartNotSupportedError(msg)
+        response.add_context_property(
+            {
+                "name": "foodItem",
+                "namespace": "Alexa.Cooking",
+                "value": payload["foodItem"],
+            }
+        )
+
+    await hass.services.async_call(
+        domain, service, data, blocking=False, context=context
+    )
+    
+    response.add_context_property(
+        {
+            "name": "cookingMode",
+            "namespace": "Alexa.Cooking",
+            "value": cooking_mode,
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.SceneController", "Activate"))

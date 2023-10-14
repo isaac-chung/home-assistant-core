@@ -1026,3 +1026,19 @@ async def test_get_property_blowup(
         properties.assert_not_has_property("Alexa.ThermostatController", "temperature")
 
     assert "Boom Fail" in caplog.text
+
+
+async def test_api_set_cooking_mode(hass: HomeAssistant) -> None:
+    """Test api set cooking mode."""
+    hass.states.async_set(
+        "cooking.test_microwave",
+        "defrost",
+        {
+            "friendly_name": "Test microwave",
+            "supported_features": 1 | 8 | 64 | 1024,
+            "device_class": "microwave",
+        },
+    )
+    properties = await reported_properties(hass, "cooking.test_microwave")
+    properties.assert_equal("Alexa.Cooking", "cookingMode", "defrost")
+

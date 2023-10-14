@@ -1,7 +1,7 @@
 """Constants for the Alexa integration."""
 from collections import OrderedDict
 
-from homeassistant.components import climate
+from homeassistant.components import cooking, climate
 from homeassistant.const import UnitOfTemperature
 
 DOMAIN = "alexa"

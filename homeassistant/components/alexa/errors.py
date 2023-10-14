@@ -158,3 +158,10 @@ class AlexaVideoActionNotPermittedForContentError(AlexaError):
 
     namespace = "Alexa.Video"
     error_type = "ACTION_NOT_PERMITTED_FOR_CONTENT"
+
+
+class AlexaCookingRemoteStartNotSupportedError(AlexaError):
+    """Class to represent cooking remote start not supported errors."""
+
+    namespace = "Alexa.Cooking"
+    error_type = "REMOTE_START_NOT_SUPPORTED"
